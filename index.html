@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>health-samurai</title>
+
+    <meta name="description" content="FHIR">
+    <meta name="author" content="Nikolay Ryzhikov">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="css/reveal.css"/>
+    <link rel="stylesheet" href="css/theme/white.css" id="theme"/>
+
+
+
+    <!-- <link rel="stylesheet" href="lib/css/zenburn.css"> -->
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="css/font-awesome.min.css"/>
+
+    <!-- Printing and PDF exports -->
+    <script>
+     var link = document.createElement( 'link' );
+     link.rel = 'stylesheet';
+     link.type = 'text/css';
+     link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+     document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]><script src="lib/js/html5shiv.js"></script><![endif]-->
+    <style>
+     @font-face {
+         font-family: fontello;
+         src: url('font/fontello.woff') format('woff'), url('font/fontello.eot') format('embedded-opentype'),url('font/fontello.woff') format('woff'),url('font/fontello.svg') format('svg'),url('font/fontello.ttf') format('truetype');
+
+     }
+
+     body .hs-icon {
+         font-family: fontello;
+         text-transform: none;
+         -webkit-font-smoothing: antialiased;
+         text-align: center;
+         speak: none;
+         font-weight: normal;
+         text-decoration: inherit;
+         display: inline-block;
+         font-style: normal;
+         font-variant: normal;
+         -moz-osx-font-smoothing: grayscale;
+
+     }
+
+     body .hs-icon.icon-mapper:before {
+         content: '\e800';
+
+     }
+
+     body .hs-icon.icon-foodtaster:before {
+         content: '\e801';
+
+     }
+
+     body .hs-icon.icon-aidbox:before {
+         content: '\e806';
+
+     }
+
+     body .hs-icon.icon-fhirbase:before {
+         content: '\e802';
+
+     }
+
+     body .hs-icon.icon-formstamp:before {
+         content: '\e803';
+
+     }
+
+     body .hs-icon.icon-choice:before {
+         content: '\e804';
+
+     }
+
+     body .hs-icon.icon-samurai:before {
+         content: '\e805';
+
+     }
+
+    .reveal pre code {
+        background: black;
+        overflow: hidden;
+        max-height: 500px;
+        padding: 20px;
+    }
+
+     .reveal section img {
+         border: none;
+         box-shadow: none;
+     }
+     .slidernav img{
+         width: 80px;
+         display: inline-block;
+         margin: 10px;
+     }
+     h3 strong {
+         color: #DC322F;
+     }
+
+     .red {
+         color: #DC322F !important;
+     }
+
+     .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+         color: #002B36;
+     }
+
+     .reveal blockquote {
+         background: #FDF6E3;
+     }
+    </style>
+  </head>
+
+  <body>
+    <i style="position: absolute; left: 20px; top: 20px; color: #ddd;" class="hs-icon icon-samurai"></i>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <section>
+          <h3>pg, js and health IT</h3>
+          <p style="color: #666;"> pgconf 2016 by @niquola</p>
+        </section>
+
+        <section style="top: 0px; display: block;" class="present">
+          <h3 style="font-size: 50px">
+            Nikolai Ryzhikov
+          </h3>
+          <a href="http://health-samurai.io" style="font-size: 30px; color: #666;"> CTO of Health Samurai</a>
+          <br/>
+          <img src="niquola.jpg" style="border:none; width: 400px; box-shado: none; background: transparent;">
+          <p style="letter-spacing: 32px;">
+            <a href="http://github.com/niquola">
+              <i class="fa fa-github"></i>
+            </a>
+            <a href="http://twitter.com/niquola">
+              <i class="fa fa-twitter"></i>
+            </a>
+            <a href="https://plus.google.com/u/0/+%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D0%B9%D0%A0%D1%8B%D0%B6%D0%B8%D0%BA%D0%BE%D0%B2">
+              <i class="fa fa-google-plus"></i>
+            </a>
+            <a href="https://www.facebook.com/nicola.ryzhikov">
+              <i class="fa fa-facebook"></i>
+            </a>
+          </p>
+        </section>
+
+        <section>
+          <h2>Patient Centric</h2>
+          <hr/>
+          <img src="pc.png"/>
+          <p>Evidence Based Medicine</p>
+        </section>
+
+        <section>
+          <h1>Standards</h1>
+        </section>
+
+    <section>
+      <img src="fhirl.png"/>
+      <hr/>
+      <p>Fast Health <br/>Interoperability <br/> Resources</p>
+    </section>
+
+    <section>
+      <h3>Informational Model (~100)</h3>
+      <hr/>
+      <img src="ress.png"/>
+      <p color="#666">~100 Resources</p>
+    </section>
+
+    <section>
+      <h2>Patient</h2>
+      <hr/>
+      <img src="pt.png"/>
+    </section>
+
+    <section data-markdown>
+      <script type="text/template">
+### Structure Definition (Meta Data)
+
+```json
+...
+{
+    "path": "Patient.id",
+    "short": "Logical id of this artifact",
+    "definition": "The logical id of the resource, as used in the URL for the resource. Once assigned, this value never changes.",
+    "comments": "The only time that a resource does not have an id is when it is being submitted to the server using a create operation. Bundles always have an id, though it is usually a generated UUID.",
+    "min": 0,
+    "max": "1",
+    "type": [{"code": "id"}],
+    "isSummary": true
+}
+...
+```
+      </script>
+    </section>
+
+    <section data-markdown>
+      <script type="text/template">
+## JSON or XML Document
+```json
+{
+ "resourceType": "Patient",
+ "identifier": [{
+    "use": "usual",
+    "label": "MRN",
+    "system": "urn:oid:1.2.36.146.595.217.0.1",
+    "value": "12345",
+    "period": { "start": "2001-05-06" },
+    "assigner": { "display": "Acme Healthcare"}
+ }],
+ "name": [{
+    "use": "official",
+    "family": [ "Chalmers" ],
+    "given": [ "Peter", "James" ]
+ }],
+...
+}
+```
+      </script>
+    </section>
+
+    <section data-markdown>
+      <script type="text/template">
+## Extensions
+```json
+{"resourceType": "Patient",
+ "extension": [
+    {
+      "url": "http://hl7.org/fhir/Profile/us-core#race",
+      "valueCodeableConcept": {
+        "coding": [
+          {
+            "system": "http://hl7.org/fhir/v3/Race",
+            "code": "1096-7"
+...
+```
+      </script>
+    </section>
+
+
+    <section data-markdown>
+      <script type="text/template">
+        ## REST API (Operations)
+        ```
+        POST /patient
+        GET  /patient/<id>
+        PUT  /patient/<id>
+        GET  /patient?name=nicola
+
+        PATCH /patient/<id>
+        ```
+      </script>
+    </section>
+
+
+        <section>
+          <h1>Why FHIR?</h1>
+          <ul>
+            <li>open</li>
+            <li>community</li>
+            <li>eco-system</li>
+          </ul>
+        </section>
+
+    <section>
+      <h2> <img style="display:inline-block; height: 1em;" src="fhirbase.png"/> Fhirbase</h2>
+      <hr/>
+      <h3 style="color:#666">Database as a library</h3>
+    </section>
+
+      <section data-markdown><script type="text/template">
+### API
+```sql
+SELECT fhir_create($JSONB$
+  {
+    resourceType: "Patient",
+    name: "Ivan",
+    birthDate: "1981-01-02"
+  }
+$JSONB$);
+
+fhir_read(resource_type, logical_id)
+
+fhir_update(resource::jsonb)
+
+fhir_vread(resource_type, version_id)
+
+fhir_delete(resource_type, logical_id)
+
+fhir_history(resource_type, logical_id)
+
+fhir_transaction(bundle::jsonb)
+```
+      </script></section>
+
+      <section data-markdown><script type="text/template">
+## SEARCH SQL
+```sql
+select fhir.search_sql('Patient',
+ 'given=mark&careprovider:Organization.name=Acme&_count=10');
+
+SELECT *
+  FROM patient
+  JOIN organization
+    ON idx_fns.index_as_reference(
+         patient.content,
+         '{careProvider}'
+       ) && ARRAY[organization.logical_id]::text[]
+   AND idx.index_as_string(
+          organization.content,
+          '{name}'
+       ) ilike '%Acme%'                                                                      +
+ WHERE idx_fns.index_as_string(
+         patient.content,
+         '{name,given}'
+       ) ilike '%mark%')
+ LIMIT 10                                                                                                                                                +
+OFFSET 0
+```
+      </script></section>
+
+    <section data-markdown>
+      <script type="text/template">
+### How serch works?
+---
+
+* Query
+* StructureDefinition
+* SearchParameter 
+
+---
+
+SQL
+      </script>
+    </section>
+
+
+      <section data-markdown><script type="text/template">
+## SEARCH
+```sql
+GET [base]/Encounter?length=gt20
+
+GET [base]/Patient/23/Procedure?date=ge2010-01-01&date=le2011-12-31
+
+GET [base]/ValueSet?url:below=http://acme.org/fhir/
+# operators
+GET [base]/Patient?gender:not=male
+# chained params
+GET [base]/DiagnosticReport?subject:Patient.name=peter
+# eager loading
+GET [base]/MedicationOrder?_include=MedicationOrder:patient&criteria...
+
+GET [base]/MedicationOrder?_revinclude=Provenance:target&criteria...
+
+```
+      </script></section>
+
+      <section data-markdown><script type="text/template">
+## Index On Expression
+```sql
+SELECT fhir_index_parameter($JSON$
+  {"resourceType": "Patient", "name": "name"}
+$JSON$);
+
+CREATE INDEX
+  patient_given_string_idx
+  ON patient
+  USING gin (
+    fhirbase_idx_as_string(
+      content, '{name,given}'::text[])
+      gin_trgm_ops
+   )
+;
+```
+      </script></section>
+
+      <section data-markdown><script type="text/template">
+## JS query
+```sql
+select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b.# ($ = 2 | $ < 3)';
+select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b.# IN (1,2,5)';
+select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b @> [1,2]';
+
+```
+      </script></section>
+
+      <section data-markdown><script type="text/template">
+### Performance
+
+#### 10M pt; MacBook Air (cpu: 1,7 GHz Intel Core i7; mem: 8Gb)
+---
+
+| query | ms|
+|-----|:--------|
+| patient with unique name | 51.238 |
+| all Johns in database | 220.397 |
+| name=John&gender=female | 172.586 |
+| name=John&gender=male | 80.154 |
+| name=John&gender=male&active=true&address=YALUMBA | 8031.600 |
+| name=John&gender=male&_sort=name | 234.077 |
+| name=John&gender=male&_sort=active | 209.552 |
+      </script></section>
+
+        <section>
+          <ul>
+            <li>Kainos (UK)</li>
+            <li>mgrid (ND)</li>
+            <li>MIAC & Netrika (RU)</li>
+            <li>HSPC (US)</li>
+            <li>ePrescriptions (BY)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3> JSONB size</h3>
+        </section>
+
+        <section>
+          <h3>Problems</h3>
+          <ul>
+            <li>language</li>
+            <li>modularity</li>
+            <li>tests</li>
+          </ul>
+        </section>
+
+    <section>
+      <h3>SQL PG/PLSQL</h3>
+      <pre style="height: 200%"><code class="sql" style="width: 160%; margin-left: -30%;">func _expand_search_params(_resource_type text, _query text) RETURNS setof query_param
+  WITH RECURSIVE params(parent_resource, link_path, res, chain, key, operator, value) AS (
+    SELECT null::text as parent_resource, -- we start with empty parent resoure
+           '{}'::text[] as link_path, -- path of reference attribute to join
+           _resource_type::text as res, -- this is resource to apply condition
+           ARRAY[_resource_type]::text[] || key as chain, -- initial chain
+           key as key,
+           operator as operator,
+           value as value
+    FROM fhirbase_params._parse_param(_query)
+    WHERE key[1] NOT IN ('_tag', '_security', '_profile', '_sort', '_count', '_page')
+    UNION
+    SELECT res as parent_resource, -- move res to parent_resource
+           fhirbase_coll._rest(ri.path) as link_path, -- remove first element
+           this.get_reference_type(x.key[1], re.ref_type) as res, -- set next res in chain
+           x.chain AS chain, -- save search path
+           fhirbase_coll._rest(x.key) AS key, -- remove first item from key untill only one key left
+           x.operator,
+           x.value
+     FROM  params x
+     JOIN  searchparameter ri
+       ON  ri.name = split_part(key[1], ':',1)
+      AND  ri.base = x.res
+     JOIN  structuredefinition_elements re
+       ON  re.path = ri.path
+    WHERE array_length(key,1) > 1
+  )
+  SELECT
+    parent_resource as parent_resource,
+    link_path as link_path,
+    res as resource_type,
+    fhirbase_coll._butlast(p.chain) as chain,
+    ri.search_type,
+    ri.is_primitive,
+    ri.type,
+    fhirbase_coll._rest(ri.path)::text[] as field_path,
+    fhirbase_coll._last(key) as key,
+    operator,
+    value
+  FROM params p
+  JOIN searchparameter ri
+    ON ri.base = res
+   AND ri.name = key[1]
+ where array_length(key,1) = 1
+  ORDER by p.chain
+      </code></pre>
+    </section>
+
+    <section>
+      <h3>plv8: V8 JavaScript in pg </h3>
+      <hr/>
+<ul>
+  <li>Scalar function calls</li>
+  <li>Trigger function calls</li>
+  <li>Mapping between JS and DB types</li>
+  <li>Prepared Statements and Cursors</li>
+  <li>Subtransaction & Window function API</li>
+  <li>Remote debugger</li>
+  <li>Runtime separation across users</li>
+</ul>
+    </section>
+
+
+        <section>
+          <h3>js in pg</h3>
+          <hr/>
+          <ul>
+            <li>better languages</li>
+            <li>performance</li>
+            <li>eco-system</li>
+          </ul>
+        </section>
+
+    <section>
+      <h3>pg.js: mock plv8</h3>
+<pre><code class="coffee">Client = require('pg-native')
+global.INFO="INFO"
+global.ERROR="ERROR"
+global.DEBUG="DEBUG"
+
+module.exports =
+  execute: -&gt;
+    client.querySync.apply(client, arguments).map(x) ->
+      obj = {}
+      ...
+  elog: (x, msg) -&gt;
+    console.log "#{x}:", msg
+    return
+  quote_literal: (str)-&gt; str && client.pq.escapeLiteral(str)
+  quote_ident: (str)-&gt; str && client.pq.escapeIdentifier(str)
+  call: (fn, args...)-&gt;
+    ...
+  require: (nm)-&gt;
+    require('./loader').scan(nm)
+  cache: {}
+</code></pre>
+        </section>
+
+    <section>
+      <h3>dev in node</h3>
+<pre><code class="coffee">namings = require('../core/namings')
+pg_meta = require('../core/pg_meta')
+...
+
+fhir_create_resource = (plv8, query)->
+  resource = query.resource
+  throw new Error("expected arguments {resource: ...}") unless resource
+  errors = validate_create_resource(resource)
+  return errors if errors
+
+  [table_name, hx_table_name, errors] = ensure_table(plv8, resource.resourceType)
+  ...
+
+exports.fhir_create_resource = fhir_create_resource
+exports.fhir_create_resource.plv8_signature = ['json', 'json']
+</code></pre>
+        </section>
+
+    <section>
+      <h3>test in node</h3>
+<pre><code class="coffee">plv8 = require('../../plpl/src/plv8')
+crud = require('../../src/fhir/crud')
+assert = require('assert')
+
+describe "CORE: CRUD spec", ->
+  beforeEach ->
+    plv8.execute("SET plv8.start_proc = 'plv8_init'")
+    schema.fhir_drop_storage(plv8, resourceType: 'Users')
+    schema.fhir_create_storage(plv8, resourceType: 'Users')
+
+  it "create", ->
+    created = crud.fhir_create_resource(plv8, resource: {resourceType: 'Users', name: 'admin'})
+    assert.notEqual(created.id , false)
+    assert.notEqual(created.meta.versionId, undefined)
+    assert.equal(created.name, 'admin')
+</code></pre>
+        </section>
+
+    <section>
+      <h3>Deploy to postgres</h3>
+
+<pre><code class="coffee">$ ./plpl reload </code></pre>
+
+
+     </section>
+
+        <section>
+          <h3>Use from postgres</h3>
+
+<pre><code class="sql">SELECT fhir_create_resource($JSONB$
+  {
+   "resource":
+     {
+       "resourceType": "Patient",
+       "id": "smith",
+       "name": [{"given": ["Smith"]}]
+     }
+   }
+$JSONB$);
+</code></pre>
+        </section>
+
+        <section>
+          <h1>Problems</h1>
+          <ul>
+            <li>modules support in plv8</li>
+            <li>deploy without re-connect</li>
+            <li>faster index functions</li>
+          </ul>
+        </section>
+
+    <section>
+      <h3> Validation by JSON Schema </h3>
+<pre><code class="sql">{
+    "title": "Example Schema",
+    "type": "object",
+    "properties": {
+      "firstName": {"type": "string"},
+      "lastName": {"type": "string"},
+      "age": {
+       "description": "Age in years",
+       "type": "integer",
+       "minimum": 0
+       }
+    },
+    "required": ["firstName", "lastName"]
+}
+</code></pre>
+        </section>
+
+    <section>
+      <h3>JSON Patch </h3>
+<pre><code class="sql">[
+  { "op": "replace", "path": "/baz", "value": "boo" },
+  { "op": "add", "path": "/hello", "value": ["world"] },
+  { "op": "remove", "path": "/foo"}
+]
+</code></pre>
+        </section>
+
+        <section>
+          <h1>Data Platform (nobackend)</h1>
+          <p>for Data Driven Systems</p>
+        </section>
+
+        <section>
+          <img src="postgrest.png"/>
+        </section>
+
+        <section>
+          <h3>firebase.com</h3>
+<pre><code class="js">
+var myFirebaseRef = new Firebase("https://?.firebaseio.com/");
+
+myFirebaseRef.set({
+  title: "Hello World!",
+  author: "Firebase",
+  location: {
+    city: "San Francisco",
+    state: "California",
+    zip: 94103
+  }
+});
+</code></pre>
+        </section>
+
+        <section>
+          <ul>
+            <li>REST API</li>
+            <li>security</li>
+            <li>validation</li>
+          </ul>
+        </section>
+
+        <section>
+          <h1>Data DSL</h1>
+        </section>
+
+        <section>
+          <h1>?</h1>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+
+     // Full list of configuration options available at:
+     // https://github.com/hakimel/reveal.js#configuration
+     Reveal.initialize({
+         controls: true,
+         progress: true,
+         history: true,
+         center: true,
+
+         transition: 'concave', // none/fade/slide/convex/concave/zoom
+
+         // Optional reveal.js plugins
+         dependencies: [
+             { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+             { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+             { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+             { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+             { src: 'plugin/highlight/highlight.pack.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+             { src: 'plugin/zoom-js/zoom.js', async: true },
+             { src: 'plugin/notes/notes.js', async: true }
+         ]
+     });
+    </script>
+  </body>
+</html>
