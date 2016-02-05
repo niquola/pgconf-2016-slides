@@ -284,6 +284,21 @@
     </section>
 
       <section data-markdown><script type="text/template">
+### Storage
+```sql
+        SELECT fhir_create_storage(plv8, resourceType: 'Patient')
+
+        CREATE TABLE patient (
+          id text,
+          resource jsonb
+        ) inherits (resource);
+
+        CREATE TABLE patient_history (id text, resource jsonb);
+```
+      </script></section>
+
+
+      <section data-markdown><script type="text/template">
 ### API
 ```sql
 SELECT fhir_create($JSONB$
@@ -307,6 +322,43 @@ fhir_history(resource_type, logical_id)
 fhir_transaction(bundle::jsonb)
 ```
       </script></section>
+
+      <section data-markdown><script type="text/template">
+## SEARCH
+```sql
+GET [base]/Encounter?length=gt20
+
+GET [base]/Patient/23/Procedure?date=ge2010-01-01&date=le2011-12-31
+
+GET [base]/ValueSet?url:below=http://acme.org/fhir/
+# operators
+GET [base]/Patient?gender:not=male
+# chained params
+GET [base]/DiagnosticReport?subject:Patient.name=peter
+# eager loading
+GET [base]/MedicationOrder?_include=MedicationOrder:patient&criteria...
+
+GET [base]/MedicationOrder?_revinclude=Provenance:target&criteria...
+
+```
+      </script></section>
+
+    <section data-markdown>
+      <script type="text/template">
+### How serch works?
+---
+
+* Query
+* StructureDefinition
+* SearchParameter 
+
+---
+
+SQL
+      </script>
+    </section>
+
+
 
       <section data-markdown><script type="text/template">
 ## SEARCH SQL
@@ -334,41 +386,6 @@ OFFSET 0
 ```
       </script></section>
 
-    <section data-markdown>
-      <script type="text/template">
-### How serch works?
----
-
-* Query
-* StructureDefinition
-* SearchParameter 
-
----
-
-SQL
-      </script>
-    </section>
-
-
-      <section data-markdown><script type="text/template">
-## SEARCH
-```sql
-GET [base]/Encounter?length=gt20
-
-GET [base]/Patient/23/Procedure?date=ge2010-01-01&date=le2011-12-31
-
-GET [base]/ValueSet?url:below=http://acme.org/fhir/
-# operators
-GET [base]/Patient?gender:not=male
-# chained params
-GET [base]/DiagnosticReport?subject:Patient.name=peter
-# eager loading
-GET [base]/MedicationOrder?_include=MedicationOrder:patient&criteria...
-
-GET [base]/MedicationOrder?_revinclude=Provenance:target&criteria...
-
-```
-      </script></section>
 
       <section data-markdown><script type="text/template">
 ## Index On Expression
@@ -390,13 +407,13 @@ CREATE INDEX
       </script></section>
 
       <section data-markdown><script type="text/template">
-## JS query
+### Waiting for:
 ```sql
 select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b.# ($ = 2 | $ < 3)';
 select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b.# IN (1,2,5)';
 select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b @> [1,2]';
-
 ```
+### JS query
       </script></section>
 
       <section data-markdown><script type="text/template">
@@ -416,6 +433,7 @@ select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b @> [1,2]';
 | name=John&gender=male&_sort=active | 209.552 |
       </script></section>
 
+
         <section>
           <ul>
             <li>Kainos (UK)</li>
@@ -427,15 +445,11 @@ select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b @> [1,2]';
         </section>
 
         <section>
-          <h3> JSONB size</h3>
-        </section>
-
-        <section>
           <h3>Problems</h3>
           <ul>
             <li>language</li>
             <li>modularity</li>
-            <li>tests</li>
+            <li>dev. experience</li>
           </ul>
         </section>
 
@@ -500,8 +514,93 @@ select '{"a": {"b": [1,2,3]}}'::jsonb @@ 'a.b @> [1,2]';
   <li>Subtransaction & Window function API</li>
   <li>Remote debugger</li>
   <li>Runtime separation across users</li>
+  <li>Heroku & RDS</li>
 </ul>
     </section>
+
+    <section>
+      <h3>plv8: functions</h3>
+      <pre><code class="sql">
+  CREATE FUNCTION plv8_test(keys text[], vals text[])
+  RETURNS text AS $$
+    var o = {};
+    for(var i=0; i&lt;keys.length; i++){
+        o[keys[i]] = vals[i];
+    }
+    return JSON.stringify(o);
+  $$ LANGUAGE plv8 IMMUTABLE STRICT;
+
+  SELECT plv8_test(ARRAY['name', 'age'], ARRAY['Tom', '29']);
+  --         plv8_test
+  ---------------------------
+  -- {"name":"Tom","age":"29"}
+      </code></pre>
+      <br/>
+    </section>
+
+    <section>
+      <h3>plv8: returning function calls</h3>
+      <pre><code class="sql">
+CREATE TYPE rec AS (i integer, t text);
+CREATE FUNCTION set_of_records() RETURNS SETOF rec AS
+$$
+    // plv8.return_next() stores records in an internal tuplestore,
+    // and return all of them at the end of function.
+    plv8.return_next( { "i": 1, "t": "a" } );
+    plv8.return_next( { "i": 2, "t": "b" } );
+
+    // You can also return records with an array of JSON.
+    return [ { "i": 3, "t": "c" }, { "i": 4, "t": "d" } ];
+$$
+LANGUAGE plv8;
+
+SELECT * FROM set_of_records();
+      </code></pre>
+      <br/>
+    </section>
+
+    <section>
+      <h3>plv8: triggers</h3>
+      <pre><code class="sql">
+CREATE FUNCTION test_trigger() RETURNS trigger AS
+$$
+    plv8.elog(NOTICE, "NEW = ", JSON.stringify(NEW));
+    plv8.elog(NOTICE, "OLD = ", JSON.stringify(OLD));
+    plv8.elog(NOTICE, "TG_OP = ", TG_OP);
+    plv8.elog(NOTICE, "TG_ARGV = ", TG_ARGV);
+    if (TG_OP == "UPDATE") {
+        NEW.i = 102;
+        return NEW;
+    }
+$$ LANGUAGE "plv8";
+
+CREATE TRIGGER test_trigger
+    BEFORE INSERT OR UPDATE OR DELETE
+    ON test_tbl FOR EACH ROW
+    EXECUTE PROCEDURE test_trigger('foo', 'bar');
+      </code></pre>
+      <br/>
+    </section>
+
+
+    <section>
+      <h3>plv8: cursors</h3>
+      <pre><code class="js">
+  var plan = plv8.prepare(
+   'SELECT * FROM tbl WHERE col = $1', ['int']
+  );
+  var rows = plan.execute( [1] );
+  var sum = 0;
+  for (var i = 0; i < rows.length; i++) {
+    sum += rows[i].num;
+  }
+  plan.free();
+
+  return sum;
+      </code></pre>
+      <br/>
+    </section>
+
 
 
         <section>
@@ -603,15 +702,6 @@ $JSONB$);
 </code></pre>
         </section>
 
-        <section>
-          <h1>Problems</h1>
-          <ul>
-            <li>modules support in plv8</li>
-            <li>deploy without re-connect</li>
-            <li>faster index functions</li>
-          </ul>
-        </section>
-
     <section>
       <h3> Validation by JSON Schema </h3>
 <pre><code class="sql">{
@@ -642,6 +732,15 @@ $JSONB$);
         </section>
 
         <section>
+          <h1>Problems</h1>
+          <ul>
+            <li>native modules support in plv8</li>
+            <li>deploy without re-connect</li>
+            <li>faster index functions</li>
+          </ul>
+        </section>
+
+        <section>
           <h1>Data Platform (nobackend)</h1>
           <p>for Data Driven Systems</p>
         </section>
@@ -668,6 +767,8 @@ myFirebaseRef.set({
         </section>
 
         <section>
+          <h3>app code?</h3>
+          <hr/>
           <ul>
             <li>REST API</li>
             <li>security</li>
